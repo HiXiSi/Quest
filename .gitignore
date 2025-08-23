@@ -1,0 +1,214 @@
+# ===========================================
+# 资料管理平台 .gitignore
+# Go (Golang) + Vue.js 项目
+# ===========================================
+
+# ============ Go相关 ============
+# 二进制文件
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+material-platform
+material-platform.exe
+
+# Go测试相关
+*.test
+*.out
+*.prof
+coverage.txt
+coverage.html
+
+# Go模块代理缓存
+go.sum.bak
+
+# 构建目录
+/build/
+/dist/
+/bin/
+
+# ============ 前端相关 ============
+# Node.js依赖
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 构建输出
+/frontend/dist/
+/frontend/build/
+
+# 前端缓存
+.npm
+.yarn
+.pnpm
+.eslintcache
+
+# ============ 数据库相关 ============
+# SQLite数据库文件
+*.db
+*.sqlite
+*.sqlite3
+database.db
+/static/database.db
+
+# 数据库备份
+*.db.bak
+*.sql.bak
+
+# ============ 文件上传相关 ============
+# 上传文件目录
+/uploads/
+/static/uploads/
+# 但保留目录结构
+!/uploads/.gitkeep
+!/static/.gitkeep
+
+# 临时文件
+/tmp/
+/temp/
+
+# ============ 日志文件 ============
+*.log
+logs/
+/log/
+
+# ============ 环境配置 ============
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 配置文件中的敏感信息
+config.json
+config.yaml
+config.yml
+secrets.json
+
+# ============ IDE/编辑器 ============
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# GoLand/IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+
+# ============ 操作系统 ============
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+
+# ============ 缓存和临时文件 ============
+# 通用缓存
+.cache/
+.tmp/
+
+# 前端工具缓存
+.nuxt/
+.next/
+.vuepress/dist
+.serverless/
+.fusebox/
+
+# Webpack
+.webpack/
+
+# ============ 证书和密钥 ============
+# SSL证书
+*.pem
+*.key
+*.crt
+*.cert
+
+# JWT密钥
+jwt-secret*
+private-key*
+
+# ============ 备份文件 ============
+*.bak
+*.backup
+*.old
+*~
+
+# ============ 压缩文件 ============
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# ============ 文档生成 ============
+/docs/build/
+/docs/.vuepress/dist/
+
+# API文档
+/api-docs/
+
+# ============ 测试相关 ============
+# 测试覆盖率
+coverage/
+.nyc_output/
+
+# 端到端测试
+/tests/e2e/videos/
+/tests/e2e/screenshots/
+/cypress/videos/
+/cypress/screenshots/
+
+# ============ 部署相关 ============
+# Docker
+.dockerignore
+
+# 部署脚本中的敏感信息
+deploy.sh
+docker-compose.override.yml
+
+# ============ 自定义 ============
+# 本地开发配置
+local-config.*
+dev-config.*
+
+# 数据导入导出
+/data/
+/exports/
+/imports/
+
+# 用户自定义忽略文件
+.gitignore.local
