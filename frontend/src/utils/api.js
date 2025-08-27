@@ -35,6 +35,11 @@ api.interceptors.response.use(
         case 401:
           // 未授权，清除token并跳转到登录页
           localStorage.removeItem('token')
+          // 动态导入userStore以避免循环依赖
+          import('@/stores/user').then(({ useUserStore }) => {
+            const userStore = useUserStore()
+            userStore.logout()
+          })
           router.push('/login')
           ElMessage.error('登录已过期，请重新登录')
           break

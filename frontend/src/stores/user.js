@@ -4,7 +4,7 @@ import api from '@/utils/api'
 
 export const useUserStore = defineStore('user', () => {
   const token = ref(localStorage.getItem('token') || '')
-  const user = ref(null)
+  const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
 
   const isLoggedIn = computed(() => !!token.value && !!user.value)
 
@@ -17,6 +17,11 @@ export const useUserStore = defineStore('user', () => {
   // 设置用户信息
   const setUser = (userData) => {
     user.value = userData
+    if (userData) {
+      localStorage.setItem('user', JSON.stringify(userData))
+    } else {
+      localStorage.removeItem('user')
+    }
   }
 
   // 登录
@@ -76,6 +81,7 @@ export const useUserStore = defineStore('user', () => {
     token.value = ''
     user.value = null
     localStorage.removeItem('token')
+    localStorage.removeItem('user')
   }
 
   // 初始化用户信息
@@ -84,8 +90,10 @@ export const useUserStore = defineStore('user', () => {
       try {
         await fetchUserProfile()
       } catch (error) {
-        // token可能已过期
+        // token可能已过期或无效
+        console.log('用户初始化失败:', error.message)
         logout()
+        throw error
       }
     }
   }

@@ -77,8 +77,18 @@ const router = createRouter({
 })
 
 // 路由守卫
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
+  
+  // 如果有token但没有用户信息，先初始化用户
+  if (userStore.token && !userStore.user) {
+    try {
+      await userStore.initUser()
+    } catch (error) {
+      // 初始化失败，可能token已过期
+      console.log('用户初始化失败:', error.message)
+    }
+  }
   
   if (to.meta.requiresAuth && !userStore.isLoggedIn) {
     next('/login')

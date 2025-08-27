@@ -17,4 +17,21 @@ app.use(createPinia())
 app.use(router)
 app.use(ElementPlus)
 
-app.mount('#app')
+// 初始化应用
+const initApp = async () => {
+  // 动态导入userStore以确保Pinia已初始化
+  const { useUserStore } = await import('@/stores/user')
+  const userStore = useUserStore()
+  
+  // 尝试初始化用户状态
+  try {
+    await userStore.initUser()
+  } catch (error) {
+    // 初始化失败不阻塞应用启动
+    console.log('用户状态初始化失败:', error.message)
+  }
+  
+  app.mount('#app')
+}
+
+initApp()
