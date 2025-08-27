@@ -5,7 +5,6 @@ import { useUserStore } from '@/stores/user'
 const Login = () => import('@/views/Login.vue')
 const Register = () => import('@/views/Register.vue')
 const Layout = () => import('@/views/Layout.vue')
-const Dashboard = () => import('@/views/Dashboard.vue')
 const FileManager = () => import('@/views/FileManager.vue')
 const FileUpload = () => import('@/views/FileUpload.vue')
 const CategoryManager = () => import('@/views/CategoryManager.vue')
@@ -34,11 +33,6 @@ const routes = [
     children: [
       {
         path: '',
-        name: 'Dashboard',
-        component: Dashboard
-      },
-      {
-        path: 'files',
         name: 'FileManager',
         component: FileManager
       },

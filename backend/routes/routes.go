@@ -63,7 +63,10 @@ func SetupRoutes(r *gin.Engine) {
 				files.POST("/:id/restore", controllers.RestoreFile)
 				files.GET("/:id/download", controllers.DownloadFile)
 				files.GET("/:id/preview", controllers.PreviewFile)
-				
+				files.GET("/:id/content", controllers.GetFileContent)
+				files.PUT("/:id/content", controllers.UpdateFileContent)
+				files.GET("/:id/thumbnail", controllers.GetFileThumbnail)
+
 				// 文件批量操作
 				files.POST("/batch-delete", controllers.BatchDeleteFiles)
 				files.POST("/batch-restore", controllers.BatchRestoreFiles)
@@ -74,6 +77,8 @@ func SetupRoutes(r *gin.Engine) {
 			{
 				recycle.GET("/", controllers.GetDeletedFiles)
 				recycle.DELETE("/empty", controllers.EmptyRecycleBin)
+				recycle.DELETE("/:id", controllers.PermanentDeleteFile)
+				recycle.POST("/batch-delete", controllers.BatchPermanentDeleteFiles)
 			}
 		}
 

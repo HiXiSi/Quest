@@ -4,47 +4,80 @@
 # ===========================================
 
 # ============ Go相关 ============
-# 二进制文件
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-material-platform
-material-platform.exe
+# Go后端忽略规则
+/backend/*.exe
+/backend/*.exe~
+/backend/*.dll
+/backend/*.so
+/backend/*.dylib
+/backend/main
+/backend/material-platform
+/backend/material-platform.exe
 
-# Go测试相关
-*.test
-*.out
-*.prof
-coverage.txt
-coverage.html
+# Go测试文件
+/backend/*.test
+/backend/*.out
+/backend/coverage.html
+/backend/coverage.out
 
-# Go模块代理缓存
-go.sum.bak
+# Go依赖文件
+/backend/vendor/
 
-# 构建目录
-/build/
-/dist/
-/bin/
+# 数据库文件
+/backend/*.db
+/backend/*.sqlite
+/backend/*.sqlite3
+
+# 日志文件
+/backend/*.log
+
+# IDE配置文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 系统文件
+.DS_Store
+Thumbs.db
 
 # ============ 前端相关 ============
-# Node.js依赖
-node_modules/
+# Vue前端忽略规则
+/frontend/node_modules/
+/frontend/dist/
+/frontend/dist-ssr/
+/frontend/*.local
+
+# Vue构建和缓存文件
+/frontend/.cache/
+/frontend/.temp/
+/frontend/.vite/
+
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+
+# npm debug日志
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# 构建输出
-/frontend/dist/
-/frontend/build/
+# 编辑器目录和文件
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# 前端缓存
-.npm
-.yarn
-.pnpm
-.eslintcache
+# 文件上传目录
+/uploads/
+/files/
 
 # ============ 数据库相关 ============
 # SQLite数据库文件

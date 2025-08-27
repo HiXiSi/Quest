@@ -148,19 +148,3 @@ func DeleteTag(c *gin.Context) {
 
 	utils.SuccessResponse(c, gin.H{"message": "标签删除成功"})
 }
-
-// GetPopularTags 获取热门标签
-func GetPopularTags(c *gin.Context) {
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
-	if limit < 1 || limit > 50 {
-		limit = 10
-	}
-
-	var tags []models.Tag
-	if err := config.DB.Where("usage_count > 0").Order("usage_count DESC").Limit(limit).Find(&tags).Error; err != nil {
-		utils.ServerErrorResponse(c, "数据库查询失败")
-		return
-	}
-
-	utils.SuccessResponse(c, tags)
-}

@@ -554,3 +554,100 @@ func EmptyRecycleBin(c *gin.Context) {
 
 	utils.SuccessResponse(c, gin.H{"message": "回收站清空成功"})
 }
+
+// PermanentDeleteFile 彻底删除单个文件
+func PermanentDeleteFile(c *gin.Context) {
+	fileID := c.Param("id")
+	userID, _ := c.Get("user_id")
+	role, _ := c.Get("role")
+
+	var file models.File
+	query := config.DB.Where("id = ? AND is_deleted = ?", fileID, true)
+
+	// 非管理员只能删除自己的文件
+	if role != "admin" {
+		query = query.Where("user_id = ?", userID)
+	}
+
+	if err := query.First(&file).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			utils.NotFoundResponse(c, "文件不存在或未在回收站中")
+			return
+		}
+		utils.ServerErrorResponse(c, "数据库查询失败")
+		return
+	}
+
+	// 删除物理文件
+	if err := os.Remove(file.FilePath); err != nil {
+		// 记录错误但继续删除数据库记录
+		fmt.Printf("删除物理文件失败: %s, 错误: %v\n", file.FilePath, err)
+	}
+
+	// 删除文件标签关联
+	config.DB.Where("file_id = ?", file.ID).Delete(&models.FileTag{})
+
+	// 彻底删除数据库记录
+	if err := config.DB.Unscoped().Delete(&file).Error; err != nil {
+		utils.ServerErrorResponse(c, "文件删除失败")
+		return
+	}
+
+	utils.SuccessResponse(c, gin.H{"message": "文件已彻底删除"})
+}
+
+// BatchPermanentDeleteFiles 批量彻底删除文件
+func BatchPermanentDeleteFiles(c *gin.Context) {
+	var req struct {
+		FileIDs []uint `json:"file_ids" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ErrorResponse(c, 400, "请求参数错误: "+err.Error())
+		return
+	}
+
+	userID, _ := c.Get("user_id")
+	role, _ := c.Get("role")
+
+	var files []models.File
+	query := config.DB.Where("id IN ? AND is_deleted = ?", req.FileIDs, true)
+
+	// 非管理员只能删除自己的文件
+	if role != "admin" {
+		query = query.Where("user_id = ?", userID)
+	}
+
+	if err := query.Find(&files).Error; err != nil {
+		utils.ServerErrorResponse(c, "数据库查询失败")
+		return
+	}
+
+	if len(files) == 0 {
+		utils.ErrorResponse(c, 400, "没有找到可删除的文件")
+		return
+	}
+
+	// 删除物理文件和数据库记录
+	var deletedCount int
+	for _, file := range files {
+		// 删除物理文件
+		if err := os.Remove(file.FilePath); err != nil {
+			// 记录错误但继续处理其他文件
+			fmt.Printf("删除物理文件失败: %s, 错误: %v\n", file.FilePath, err)
+		}
+
+		// 删除文件标签关联
+		config.DB.Where("file_id = ?", file.ID).Delete(&models.FileTag{})
+
+		// 彻底删除数据库记录
+		if err := config.DB.Unscoped().Delete(&file).Error; err == nil {
+			deletedCount++
+		}
+	}
+
+	utils.SuccessResponse(c, gin.H{
+		"message":       fmt.Sprintf("成功彻底删除 %d 个文件", deletedCount),
+		"deleted_count": deletedCount,
+	})
+}

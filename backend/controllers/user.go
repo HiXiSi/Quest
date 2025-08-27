@@ -105,7 +105,7 @@ func Login(c *gin.Context) {
 // GetUserProfile 获取用户个人信息
 func GetUserProfile(c *gin.Context) {
 	userID, _ := c.Get("user_id")
-	
+
 	var user models.User
 	if err := config.DB.First(&user, userID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -122,7 +122,7 @@ func GetUserProfile(c *gin.Context) {
 // UpdateUserProfile 更新用户个人信息
 func UpdateUserProfile(c *gin.Context) {
 	userID, _ := c.Get("user_id")
-	
+
 	var user models.User
 	if err := config.DB.First(&user, userID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -138,7 +138,7 @@ func UpdateUserProfile(c *gin.Context) {
 		Email  string `json:"email"`
 		Avatar string `json:"avatar"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&updateData); err != nil {
 		utils.ErrorResponse(c, 400, "请求参数错误: "+err.Error())
 		return
@@ -170,7 +170,7 @@ func UpdateUserProfile(c *gin.Context) {
 func GetAllUsers(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
-	
+
 	if page < 1 {
 		page = 1
 	}
@@ -197,7 +197,7 @@ func GetAllUsers(c *gin.Context) {
 // UpdateUserByAdmin 管理员更新用户信息
 func UpdateUserByAdmin(c *gin.Context) {
 	userID := c.Param("id")
-	
+
 	var user models.User
 	if err := config.DB.First(&user, userID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -215,7 +215,7 @@ func UpdateUserByAdmin(c *gin.Context) {
 		Role     string `json:"role"`
 		Avatar   string `json:"avatar"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&updateData); err != nil {
 		utils.ErrorResponse(c, 400, "请求参数错误: "+err.Error())
 		return
@@ -260,7 +260,7 @@ func UpdateUserByAdmin(c *gin.Context) {
 // DeleteUser 删除用户（管理员功能）
 func DeleteUser(c *gin.Context) {
 	userID := c.Param("id")
-	
+
 	var user models.User
 	if err := config.DB.First(&user, userID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -293,11 +293,11 @@ func GetSystemStats(c *gin.Context) {
 	config.DB.Model(&models.File{}).Where("is_deleted = ?", false).Select("COALESCE(SUM(file_size), 0)").Scan(&totalSize)
 
 	stats := gin.H{
-		"user_count":     userCount,
-		"file_count":     fileCount,
-		"category_count": categoryCount,
-		"tag_count":      tagCount,
-		"total_size":     totalSize,
+		"user_count":           userCount,
+		"file_count":           fileCount,
+		"category_count":       categoryCount,
+		"tag_count":            tagCount,
+		"total_size":           totalSize,
 		"total_size_formatted": utils.FormatFileSize(totalSize),
 	}
 

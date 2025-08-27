@@ -24,11 +24,6 @@
         router
       >
         <el-menu-item index="/">
-          <el-icon><House /></el-icon>
-          <template #title>首页</template>
-        </el-menu-item>
-        
-        <el-menu-item index="/files">
           <el-icon><Document /></el-icon>
           <template #title>文件管理</template>
         </el-menu-item>
@@ -162,8 +157,7 @@ const breadcrumbs = computed(() => {
 // 根据路径获取菜单标题
 const getMenuTitle = (path) => {
   const titleMap = {
-    '/': '首页',
-    '/files': '文件管理',
+    '/': '文件管理',
     '/upload': '文件上传',
     '/categories': '分类管理',
     '/tags': '标签管理',
