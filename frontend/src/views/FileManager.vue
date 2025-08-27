@@ -65,11 +65,13 @@
             :key="file.id"
             class="file-card"
           >
+            <!-- 第一行：文件类型图标、文件名称、操作按钮 -->
             <div class="file-card-header">
-              <div class="file-icon-wrapper">
-                <el-icon size="24" :color="getFileTypeColor(file.file_type)">
+              <div class="file-info-line">
+                <el-icon size="16" :color="getFileTypeColor(file.file_type)" class="file-type-icon">
                   <component :is="getFileTypeIcon(file.file_type)" />
                 </el-icon>
+                <span class="file-name" :title="file.original_name">{{ file.original_name }}</span>
               </div>
               <div class="file-actions">
                 <el-dropdown trigger="click" placement="bottom-end">
@@ -96,31 +98,87 @@
               </div>
             </div>
             
-            <div class="file-content" @click="previewFile(file)">
-              <div class="file-name" :title="file.original_name">
-                {{ file.original_name }}
+            <!-- 预览区域 -->
+            <div class="file-preview" @click="previewFile(file)">
+              <!-- 图片预览 -->
+              <div v-if="isImageFile(file)" class="preview-image">
+                <img 
+                  :src="getPreviewUrl(file)"
+                  :alt="file.original_name"
+                  @error="handleImageError($event, file)"
+                  loading="lazy"
+                />
+                <div class="preview-fallback">
+                  <el-icon size="48" :color="getFileTypeColor(file.file_type)">
+                    <Picture />
+                  </el-icon>
+                </div>
               </div>
               
-              <div class="file-description" v-if="file.description">
-                {{ file.description }}
-              </div>
-              
-              <div class="file-tags" v-if="file.tags && file.tags.length > 0">
-                <el-tag
-                  v-for="tag in file.tags.slice(0, 3)"
-                  :key="tag.id"
-                  size="small"
-                  :color="tag.color || '#409EFF'"
-                  style="border: none; color: white; margin-right: 4px; margin-bottom: 4px;"
+              <!-- 视频预览 -->
+              <div v-else-if="isVideoFile(file)" class="preview-video">
+                <video 
+                  :src="getPreviewUrl(file)"
+                  muted
+                  preload="metadata"
+                  @error="handleVideoError($event, file)"
                 >
-                  {{ tag.name }}
-                </el-tag>
-                <span v-if="file.tags.length > 3" class="more-tags">
-                  +{{ file.tags.length - 3 }}
-                </span>
+                  <source :src="getPreviewUrl(file)" :type="file.mime_type">
+                </video>
+                <div class="preview-fallback">
+                  <el-icon size="48" :color="getFileTypeColor(file.file_type)">
+                    <VideoPlay />
+                  </el-icon>
+                </div>
+                <div class="video-overlay">
+                  <el-icon size="32" color="white"><VideoPlay /></el-icon>
+                </div>
               </div>
               
+              <!-- 默认显示区域 -->
+              <div v-else class="preview-default">
+                <el-icon size="48" :color="getFileTypeColor(file.file_type)">
+                  <component :is="getFileTypeIcon(file.file_type)" />
+                </el-icon>
+              </div>
+            </div>
+            
+            <div class="file-content">              
+              <!-- 标签一行 -->
+              <div class="file-tags">
+                <template v-if="file.tags && file.tags.length > 0">
+                  <el-tag
+                    v-for="tag in file.tags.slice(0, 3)"
+                    :key="tag.id"
+                    size="small"
+                    :color="tag.color || '#409EFF'"
+                    style="border: none; color: white; margin-right: 4px;"
+                  >
+                    {{ tag.name }}
+                  </el-tag>
+                  <span v-if="file.tags.length > 3" class="more-tags">
+                    +{{ file.tags.length - 3 }}
+                  </span>
+                </template>
+                <span v-else class="no-tags">无标签</span>
+              </div>
+              
+              <!-- 描述一行 -->
+              <div class="file-description">
+                <span v-if="file.description">{{ file.description }}</span>
+                <span v-else class="no-description">无描述</span>
+              </div>
+              
+              <!-- 大小和日期 -->
               <div class="file-meta">
+                <div class="file-category" v-if="file.category">
+                  <el-icon size="12"><Folder /></el-icon>
+                  <span>{{ file.category.name }}</span>
+                </div>
+                <div class="file-category" v-else>
+                  <el-icon size="12"><Folder /></el-icon>
+                  <span class="no-category">未分类</span>
+                </div>
                 <span class="file-size">{{ formatFileSize(file.file_size) }}</span>
                 <span class="file-date">{{ formatDate(file.created_at) }}</span>
               </div>
@@ -301,37 +359,13 @@ const handleCurrentChange = () => {
 }
 
 const previewFile = async (file) => {
-  // 预览文件
-  if (file.file_type === 'image' || file.file_type === 'text' || file.file_type === 'pdf') {
-    try {
-      // 对于文本文件，获取内容并在新窗口显示
-      if (file.file_type === 'text') {
-        const response = await api.get(`/files/${file.id}/preview`)
-        const newWindow = window.open('', '_blank')
-        newWindow.document.write(`
-          <html>
-            <head><title>${file.original_name}</title></head>
-            <body style="font-family: monospace; white-space: pre-wrap; padding: 20px;">
-              ${response.data.content}
-            </body>
-          </html>
-        `)
-      } else {
-        // 对于图片和PDF，获取blob并创建预览链接
-        const response = await api.get(`/files/${file.id}/preview`, {
-          responseType: 'blob'
-        })
-        const blob = new Blob([response.data], { type: file.mime_type })
-        const url = window.URL.createObjectURL(blob)
-        window.open(url, '_blank')
-        // 延迟释放URL以确保文件能正常加载
-        setTimeout(() => window.URL.revokeObjectURL(url), 10000)
-      }
-    } catch (error) {
-      console.error('预览文件失败:', error)
-      ElMessage.error('预览失败')
-    }
+  // 检查文件是否可预览
+  if (isImageFile(file) || isVideoFile(file) || file.file_type === 'pdf' || file.file_type === 'text') {
+    // 可预览的文件，在新窗口打开预览
+    const previewUrl = getPreviewUrl(file)
+    window.open(previewUrl, '_blank')
   } else {
+    // 不可预览的文件，直接下载
     downloadFile(file)
   }
 }
@@ -368,27 +402,10 @@ const saveFileEdit = async () => {
 }
 
 const downloadFile = async (file) => {
-  try {
-    const response = await api.get(`/files/${file.id}/download`, {
-      responseType: 'blob'
-    })
-    
-    // 创建下载链接
-    const blob = new Blob([response.data])
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = file.original_name
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-    
-    ElMessage.success('下载成功')
-  } catch (error) {
-    console.error('下载文件失败:', error)
-    ElMessage.error('下载失败')
-  }
+  // 直接使用下载链接
+  const downloadUrl = `/api/files/${file.id}/download`
+  window.open(downloadUrl, '_blank')
+  ElMessage.success('开始下载')
 }
 
 const deleteFile = async (file) => {
@@ -449,6 +466,47 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString()
 }
 
+// 判断是否为图片文件
+const isImageFile = (file) => {
+  const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg']
+  const extension = file.original_name.split('.').pop()?.toLowerCase()
+  return imageExtensions.includes(extension) || file.file_type === 'image'
+}
+
+// 判断是否为视频文件
+const isVideoFile = (file) => {
+  const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv']
+  const extension = file.original_name.split('.').pop()?.toLowerCase()
+  return videoExtensions.includes(extension) || file.file_type === 'video'
+}
+
+// 生成预览URL（简化版本）
+const getPreviewUrl = (file) => {
+  return `/api/files/${file.id}/preview`
+}
+
+// 图片加载错误处理
+const handleImageError = (event, file) => {
+  console.log('图片加载失败，显示默认图标')
+  event.target.style.display = 'none'
+  // 显示fallback图标
+  const fallback = event.target.nextElementSibling
+  if (fallback && fallback.classList.contains('preview-fallback')) {
+    fallback.style.display = 'flex'
+  }
+}
+
+// 视频加载错误处理
+const handleVideoError = (event, file) => {
+  console.log('视频加载失败，显示默认图标')
+  event.target.style.display = 'none'
+  // 显示fallback图标
+  const fallback = event.target.parentElement.querySelector('.preview-fallback')
+  if (fallback) {
+    fallback.style.display = 'flex'
+  }
+}
+
 onMounted(() => {
   fetchFiles()
   fetchCategories()
@@ -459,151 +517,254 @@ onMounted(() => {
 <style scoped>
 .page-container {
   padding: 20px;
-}
 
-.card-container {
-  background: white;
-  padding: 24px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+  .card-container {
+    background: white;
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
-.header-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
+    .header-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
 
-.filter-bar {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
-  align-items: center;
-}
+    .filter-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      align-items: center;
 
-.search-input {
-  width: 280px;
-}
+      .search-input {
+        width: 280px;
+      }
 
-.filter-select {
-  width: 160px;
-}
+      .filter-select {
+        width: 160px;
+      }
+    }
 
-.file-list {
-  min-height: 400px;
-}
+    .file-list {
+      min-height: 400px;
 
-.file-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 16px;
-  margin-bottom: 24px;
-}
+      .no-data {
+        text-align: center;
+        padding: 60px 0;
+      }
+    }
 
-.file-card {
-  border: 1px solid #e4e7ed;
-  border-radius: 8px;
-  background: white;
-  transition: all 0.3s ease;
-  overflow: hidden;
-}
+    .file-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
 
-.file-card:hover {
-  border-color: #409eff;
-  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.15);
-  transform: translateY(-2px);
-}
+      .file-card {
+        border: 1px solid #e4e7ed;
+        border-radius: 8px;
+        background: white;
+        transition: all 0.3s ease;
+        overflow: hidden;
 
-.file-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px 8px;
-  background: #f8f9fa;
-}
+        &:hover {
+          border-color: #409eff;
+          box-shadow: 0 4px 12px rgba(64, 158, 255, 0.15);
+          transform: translateY(-2px);
 
-.file-icon-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  background: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
+          .preview-image img {
+            transform: scale(1.05);
+          }
 
-.file-content {
-  padding: 12px 16px 16px;
-  cursor: pointer;
-}
+          .video-overlay {
+            background: rgba(0, 0, 0, 0.8);
+            transform: translate(-50%, -50%) scale(1.1);
+          }
+        }
 
-.file-name {
-  font-weight: 500;
-  font-size: 14px;
-  color: #303133;
-  margin-bottom: 8px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: 1.4;
-}
+        .file-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 8px 0 8px 8px;
+          background: #f8f9fa;
+          border-bottom: 1px solid #e4e7ed;
 
-.file-description {
-  font-size: 12px;
-  color: #606266;
-  margin-bottom: 8px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+          .file-info-line {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            min-width: 0;
 
-.file-tags {
-  margin-bottom: 8px;
-  min-height: 20px;
-}
+            .file-type-icon {
+              margin-right: 6px;
+              flex-shrink: 0;
+            }
 
-.more-tags {
-  font-size: 12px;
-  color: #909399;
-}
+            .file-name {
+              font-size: 13px;
+              color: #303133;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+              flex: 1;
+              min-width: 0;
+            }
+          }
+        }
 
-.file-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-  color: #909399;
-}
+        /* 文件预览区域样式 */
+        .file-preview {
+          height: 100px;
+          position: relative;
+          cursor: pointer;
+          background: #f8f9fa;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
 
-.file-size {
-  font-weight: 500;
-}
+          .preview-image {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
-.file-date {
-  opacity: 0.8;
-}
+            img {
+              max-width: 100%;
+              max-height: 100%;
+              object-fit: cover;
+              border-radius: 0;
+              transition: transform 0.3s ease;
+            }
+          }
 
-.no-data {
-  text-align: center;
-  padding: 60px 0;
-}
+          .preview-video {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .filter-bar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .search-input,
-  .filter-select {
-    width: 100%;
-  }
-  
-  .file-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            video {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              border-radius: 0;
+            }
+          }
+
+          .video-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            pointer-events: none;
+          }
+
+          .preview-default {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+          }
+
+          .preview-fallback {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            opacity: 0.9;
+          }
+        }
+
+        .file-content {
+          padding: 8px;
+
+          .file-category {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            color: #606266;
+
+            .el-icon {
+              margin-right: 4px;
+            }
+          }
+
+          .no-category {
+            color: #c0c4cc;
+          }
+
+          .file-tags {
+            margin-bottom: 6px;
+            min-height: 20px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2px;
+          }
+
+          .no-tags {
+            font-size: 12px;
+            color: #c0c4cc;
+          }
+
+          .file-description {
+            font-size: 12px;
+            color: #606266;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            line-height: 1.4;
+          }
+
+          .no-description {
+            color: #c0c4cc;
+          }
+
+          .file-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #909399;
+
+            .file-size {
+              font-weight: 500;
+            }
+
+            .file-date {
+              opacity: 0.8;
+            }
+          }
+
+          .more-tags {
+            font-size: 12px;
+            color: #909399;
+          }
+        }
+      }
+    }
   }
 }
 </style>

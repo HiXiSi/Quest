@@ -17,18 +17,9 @@ import (
 // DownloadFile 文件下载
 func DownloadFile(c *gin.Context) {
 	fileID := c.Param("id")
-	userID, _ := c.Get("user_id")
-	role, _ := c.Get("role")
 
 	var file models.File
-	query := config.DB.Where("id = ? AND is_deleted = ?", fileID, false)
-
-	// 非管理员只能下载自己的文件或公开文件
-	if role != "admin" {
-		query = query.Where("user_id = ? OR is_public = ?", userID, true)
-	}
-
-	if err := query.First(&file).Error; err != nil {
+	if err := config.DB.Where("id = ? AND is_deleted = ?", fileID, false).First(&file).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			utils.NotFoundResponse(c, "文件不存在")
 			return
@@ -58,18 +49,9 @@ func DownloadFile(c *gin.Context) {
 // PreviewFile 文件预览
 func PreviewFile(c *gin.Context) {
 	fileID := c.Param("id")
-	userID, _ := c.Get("user_id")
-	role, _ := c.Get("role")
 
 	var file models.File
-	query := config.DB.Where("id = ? AND is_deleted = ?", fileID, false)
-
-	// 非管理员只能预览自己的文件或公开文件
-	if role != "admin" {
-		query = query.Where("user_id = ? OR is_public = ?", userID, true)
-	}
-
-	if err := query.First(&file).Error; err != nil {
+	if err := config.DB.Where("id = ? AND is_deleted = ?", fileID, false).First(&file).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			utils.NotFoundResponse(c, "文件不存在")
 			return
@@ -252,18 +234,9 @@ func UpdateFileContent(c *gin.Context) {
 // GetFileThumbnail 获取文件缩略图
 func GetFileThumbnail(c *gin.Context) {
 	fileID := c.Param("id")
-	userID, _ := c.Get("user_id")
-	role, _ := c.Get("role")
 
 	var file models.File
-	query := config.DB.Where("id = ? AND is_deleted = ?", fileID, false)
-
-	// 非管理员只能访问自己的文件或公开文件
-	if role != "admin" {
-		query = query.Where("user_id = ? OR is_public = ?", userID, true)
-	}
-
-	if err := query.First(&file).Error; err != nil {
+	if err := config.DB.Where("id = ? AND is_deleted = ?", fileID, false).First(&file).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			utils.NotFoundResponse(c, "文件不存在")
 			return
@@ -292,7 +265,7 @@ func GetFileThumbnail(c *gin.Context) {
 
 // isPreviewSupported 检查文件类型是否支持预览
 func isPreviewSupported(fileType, mimeType string) bool {
-	supportedTypes := []string{"image", "text", "pdf"}
+	supportedTypes := []string{"image", "text", "pdf", "video"}
 	for _, t := range supportedTypes {
 		if fileType == t {
 			return true

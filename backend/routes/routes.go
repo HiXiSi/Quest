@@ -23,6 +23,11 @@ func SetupRoutes(r *gin.Engine) {
 			auth.POST("/login", controllers.Login)
 		}
 
+		// 文件预览和下载（无需认证）
+		api.GET("/files/:id/preview", controllers.PreviewFile)
+		api.GET("/files/:id/download", controllers.DownloadFile)
+		api.GET("/files/:id/thumbnail", controllers.GetFileThumbnail)
+
 		// 需要认证的路由
 		protected := api.Group("/")
 		protected.Use(middlewares.AuthMiddleware())
@@ -61,11 +66,8 @@ func SetupRoutes(r *gin.Engine) {
 				files.PUT("/:id", controllers.UpdateFile)
 				files.DELETE("/:id", controllers.DeleteFile)
 				files.POST("/:id/restore", controllers.RestoreFile)
-				files.GET("/:id/download", controllers.DownloadFile)
-				files.GET("/:id/preview", controllers.PreviewFile)
 				files.GET("/:id/content", controllers.GetFileContent)
 				files.PUT("/:id/content", controllers.UpdateFileContent)
-				files.GET("/:id/thumbnail", controllers.GetFileThumbnail)
 
 				// 文件批量操作
 				files.POST("/batch-delete", controllers.BatchDeleteFiles)

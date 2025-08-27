@@ -74,39 +74,42 @@
             文件信息
           </h3>
           
-          <el-form :model="fileForm" label-width="80px" label-position="top">
-            <el-form-item label="分类">
-              <el-select
-                v-model="fileForm.category_id"
-                placeholder="选择分类（可选）"
-                clearable
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="category in categories"
-                  :key="category.id"
-                  :label="category.name"
-                  :value="category.id"
-                />
-              </el-select>
-            </el-form-item>
-            
-            <el-form-item label="标签">
-              <el-select
-                v-model="fileForm.tag_ids"
-                placeholder="选择标签（可选）"
-                multiple
-                clearable
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="tag in tags"
-                  :key="tag.id"
-                  :label="tag.name"
-                  :value="tag.id"
-                />
-              </el-select>
-            </el-form-item>
+          <el-form :model="fileForm" label-width="70px" label-position="top" class="upload-form">
+            <!-- 分类和标签同行 -->
+            <div class="form-row">
+              <el-form-item label="分类" class="form-item-half">
+                <el-select
+                  v-model="fileForm.category_id"
+                  placeholder="选择分类（可选）"
+                  clearable
+                  style="width: 100%"
+                >
+                  <el-option
+                    v-for="category in categories"
+                    :key="category.id"
+                    :label="category.name"
+                    :value="category.id"
+                  />
+                </el-select>
+              </el-form-item>
+              
+              <el-form-item label="标签" class="form-item-half">
+                <el-select
+                  v-model="fileForm.tag_ids"
+                  placeholder="选择标签（可选）"
+                  multiple
+                  clearable
+                  style="width: 100%"
+                >
+                  <el-option
+                    v-for="tag in tags"
+                    :key="tag.id"
+                    :label="tag.name"
+                    :value="tag.id"
+                  />
+                </el-select>
+              </el-form-item>
+            </div>
             
             <el-form-item label="描述">
               <el-input
@@ -117,33 +120,37 @@
               />
             </el-form-item>
             
-            <el-form-item>
+            <el-form-item class="form-actions-item">
               <div class="form-actions">
                 <el-button 
                   type="primary" 
                   @click="uploadFiles"
                   :disabled="selectedFiles.length === 0 || uploading"
                   :loading="uploading"
-                  size="large"
+                  class="upload-btn"
                 >
                   <el-icon v-if="!uploading"><Upload /></el-icon>
                   {{ uploading ? '正在上传...' : `上传文件 (${selectedFiles.length})` }}
                 </el-button>
                 
-                <el-button 
-                  @click="clearForm"
-                  :icon="RefreshRight"
-                >
-                  清空表单
-                </el-button>
-                
-                <el-button 
-                  @click="clearFiles"
-                  :icon="Delete"
-                  :disabled="selectedFiles.length === 0"
-                >
-                  清空文件
-                </el-button>
+                <div class="secondary-actions">
+                  <el-button 
+                    @click="clearForm"
+                    :icon="RefreshRight"
+                    class="action-btn"
+                  >
+                    清空表单
+                  </el-button>
+                  
+                  <el-button 
+                    @click="clearFiles"
+                    :icon="Delete"
+                    :disabled="selectedFiles.length === 0"
+                    class="action-btn"
+                  >
+                    清空文件
+                  </el-button>
+                </div>
               </div>
             </el-form-item>
           </el-form>
@@ -373,7 +380,6 @@ const clearFiles = () => {
   if (uploadRef.value) {
     uploadRef.value.clearFiles()
   }
-  ElMessage.success('文件列表已清空')
 }
 
 // 格式化文件大小
@@ -393,159 +399,211 @@ onMounted(() => {
 <style scoped>
 .page-container {
   padding: 20px;
-}
 
-.card-container {
-  background: white;
-  padding: 24px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+  .card-container {
+    background: white;
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
-.header-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
+    .header-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
 
-/* 主体内容左右布局 */
-.upload-content {
-  display: flex;
-  gap: 24px;
-  min-height: 500px;
-}
+    /* 主体内容左右布局 */
+    .upload-content {
+      display: flex;
+      gap: 32px;
+      min-height: 500px;
+      align-items: flex-start;
 
-.upload-left {
-  flex: 1;
-  min-width: 0;
-}
+      /* 响应式设计 */
+      @media (max-width: 768px) {
+        flex-direction: column;
+        gap: 24px;
+      }
 
-.upload-right {
-  flex: 1;
-  min-width: 0;
-}
+      .upload-left {
+        flex: 1;
+        min-width: 300px;
+        max-width: 500px;
 
-.section-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  color: #303133;
-  font-size: 16px;
-  font-weight: 600;
-}
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+          max-width: none;
+        }
 
-/* 上传组件样式 */
-.upload-demo {
-  margin-bottom: 20px;
-}
+        .section-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 16px;
+          color: #303133;
+          font-size: 16px;
+          font-weight: 600;
+        }
 
-.upload-demo :deep(.el-upload-dragger) {
-  height: 180px;
-}
+        /* 上传组件样式 */
+        .upload-demo {
+          margin-bottom: 20px;
 
-/* 文件列表样式 */
-.file-list {
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 16px;
-  border: 1px solid #e4e7ed;
-}
+          :deep(.el-upload-dragger) {
+            height: 180px;
+          }
+        }
 
-.file-list h4 {
-  margin: 0 0 12px 0;
-  color: #303133;
-  font-size: 14px;
-}
+        /* 文件列表样式 */
+        .file-list {
+          background: #f8f9fa;
+          border-radius: 8px;
+          padding: 16px;
+          border: 1px solid #e4e7ed;
 
-.file-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #ebeef5;
-}
+          h4 {
+            margin: 0 0 12px 0;
+            color: #303133;
+            font-size: 14px;
+          }
 
-.file-item:last-child {
-  border-bottom: none;
-}
+          .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #ebeef5;
 
-.file-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
-}
+            &:last-child {
+              border-bottom: none;
+            }
 
-.file-name {
-  font-weight: 500;
-  color: #303133;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+            .file-info {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              flex: 1;
+              min-width: 0;
 
-.file-size {
-  color: #909399;
-  font-size: 12px;
-  flex-shrink: 0;
-}
+              .file-name {
+                font-weight: 500;
+                color: #303133;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+              }
 
-/* 表单样式 */
-.form-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
+              .file-size {
+                color: #909399;
+                font-size: 12px;
+                flex-shrink: 0;
+              }
+            }
+          }
+        }
+      }
 
-.form-actions .el-button {
-  margin-right: 0;
-}
+      .upload-right {
+        flex: 1;
+        min-width: 0;
+        max-width: 480px; /* 限制最大宽度 */
 
-/* 进度条样式 */
-.upload-progress {
-  margin-top: 20px;
-  padding: 16px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e4e7ed;
-}
+        .section-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 16px;
+          color: #303133;
+          font-size: 16px;
+          font-weight: 600;
+        }
 
-.progress-title {
-  font-size: 14px;
-  color: #303133;
-  margin-bottom: 8px;
-  font-weight: 500;
-}
+        /* 表单样式 */
+        .upload-form {
+          .form-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .upload-content {
-    flex-direction: column;
+            .form-item-half {
+              flex: 1;
+              margin-bottom: 0;
+            }
+          }
+        }
+
+        .form-actions-item {
+          margin-bottom: 0;
+        }
+
+        .form-actions {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+
+          .upload-btn {
+            width: 100%;
+            height: 44px;
+            font-size: 16px;
+            font-weight: 500;
+          }
+
+          .secondary-actions {
+            display: flex;
+            gap: 12px;
+
+            .action-btn {
+              flex: 1;
+              height: 36px;
+              font-size: 14px;
+            }
+          }
+        }
+
+        /* 进度条样式 */
+        .upload-progress {
+          margin-top: 20px;
+          padding: 16px;
+          background: #f8f9fa;
+          border-radius: 8px;
+          border: 1px solid #e4e7ed;
+
+          .progress-title {
+            font-size: 14px;
+            color: #303133;
+            margin-bottom: 8px;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+
+    /* 组件内部样式修正 */
+    :deep(.el-upload-list) {
+      display: none;
+    }
+
+    :deep(.el-form-item) {
+      margin-bottom: 20px;
+    }
+
+    :deep(.el-form-item__label) {
+      font-weight: 500;
+      color: #303133;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    :deep(.el-textarea__inner) {
+      min-height: 80px;
+    }
+
+    :deep(.el-select) {
+      .el-input__wrapper {
+        border-radius: 6px;
+      }
+    }
   }
-  
-  .form-actions {
-    flex-direction: column;
-  }
-  
-  .form-actions .el-button {
-    width: 100%;
-  }
-}
-
-/* 组件内部样式修正 */
-:deep(.el-upload-list) {
-  display: none;
-}
-
-:deep(.el-form-item) {
-  margin-bottom: 18px;
-}
-
-:deep(.el-form-item__label) {
-  font-weight: 500;
-  color: #303133;
 }
 </style>
