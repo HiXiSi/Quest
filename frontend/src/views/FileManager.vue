@@ -46,6 +46,8 @@
           class="filter-select"
         >
           <el-option label="图片" value="image" />
+          <el-option label="视频" value="video" />
+          <el-option label="三维模型" value="3d" />
           <el-option label="文档" value="document" />
           <el-option label="PDF" value="pdf" />
           <el-option label="文本" value="text" />
@@ -68,8 +70,8 @@
             <!-- 第一行：文件类型图标、文件名称、操作按钮 -->
             <div class="file-card-header">
               <div class="file-info-line">
-                <el-icon size="16" :color="getFileTypeColor(file.file_type)" class="file-type-icon">
-                  <component :is="getFileTypeIcon(file.file_type)" />
+                <el-icon size="16" :color="getFileTypeColor(file.file_type, file)" class="file-type-icon">
+                  <component :is="getFileTypeIcon(file.file_type, file)" />
                 </el-icon>
                 <span class="file-name" :title="file.original_name">{{ file.original_name }}</span>
               </div>
@@ -109,7 +111,7 @@
                   loading="lazy"
                 />
                 <div class="preview-fallback">
-                  <el-icon size="48" :color="getFileTypeColor(file.file_type)">
+                  <el-icon size="48" :color="getFileTypeColor(file.file_type, file)">
                     <Picture />
                   </el-icon>
                 </div>
@@ -126,7 +128,7 @@
                   <source :src="getPreviewUrl(file)" :type="file.mime_type">
                 </video>
                 <div class="preview-fallback">
-                  <el-icon size="48" :color="getFileTypeColor(file.file_type)">
+                  <el-icon size="48" :color="getFileTypeColor(file.file_type, file)">
                     <VideoPlay />
                   </el-icon>
                 </div>
@@ -135,10 +137,26 @@
                 </div>
               </div>
               
+              <!-- 三维模型预览 -->
+              <div v-else-if="is3DModelFile(file)" class="preview-model">
+                <div class="model-icon">
+                  <el-icon size="48" color="#9c27b0">
+                    <Box />
+                  </el-icon>
+                </div>
+                <div class="model-overlay">
+                  <el-icon size="24" color="white"><View /></el-icon>
+                  <span class="overlay-text">点击预览</span>
+                </div>
+                <div class="model-type-badge">
+                  {{ getFileExtension(file).toUpperCase() }}
+                </div>
+              </div>
+              
               <!-- 默认显示区域 -->
               <div v-else class="preview-default">
-                <el-icon size="48" :color="getFileTypeColor(file.file_type)">
-                  <component :is="getFileTypeIcon(file.file_type)" />
+                <el-icon size="48" :color="getFileTypeColor(file.file_type, file)">
+                  <component :is="getFileTypeIcon(file.file_type, file)" />
                 </el-icon>
               </div>
             </div>
@@ -264,6 +282,31 @@
         <el-button type="primary" @click="saveFileEdit" :loading="editLoading">保存</el-button>
       </template>
     </el-dialog>
+    
+    <!-- 三维模型预览对话框 -->
+    <el-dialog
+      v-model="modelPreviewVisible"
+      :title="'三维模型预览 - ' + (currentPreviewFile?.original_name || '')"
+      width="80%"
+      :close-on-click-modal="false"
+      @close="handleCloseModelPreview"
+    >
+      <div class="model-preview-container">
+        <ModelViewer
+          v-if="modelPreviewVisible && currentPreviewFile"
+          :model-url="getModelUrl(currentPreviewFile)"
+          :file-extension="getFileExtension(currentPreviewFile)"
+        />
+      </div>
+      
+      <template #footer>
+        <el-button @click="downloadFile(currentPreviewFile)" type="primary">
+          <el-icon><Download /></el-icon>
+          下载模型
+        </el-button>
+        <el-button @click="modelPreviewVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -272,9 +315,10 @@ import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
   Upload, Search, Download, Delete, Edit, View, MoreFilled,
-  Picture, Document, EditPen, VideoPlay, Headset, Folder
+  Picture, Document, EditPen, VideoPlay, Headset, Folder, Box
 } from '@element-plus/icons-vue'
 import api from '@/utils/api'
+import ModelViewer from '@/components/ModelViewer.vue'
 
 const loading = ref(false)
 const files = ref([])
@@ -298,6 +342,10 @@ const editForm = ref({
   tag_ids: [],
   description: ''
 })
+
+// 模型预览相关状态
+const modelPreviewVisible = ref(false)
+const currentPreviewFile = ref(null)
 
 const fetchFiles = async () => {
   loading.value = true
@@ -359,6 +407,13 @@ const handleCurrentChange = () => {
 }
 
 const previewFile = async (file) => {
+  // 检查文件是否为三维模型
+  if (is3DModelFile(file)) {
+    currentPreviewFile.value = file
+    modelPreviewVisible.value = true
+    return
+  }
+  
   // 检查文件是否可预览
   if (isImageFile(file) || isVideoFile(file) || file.file_type === 'pdf' || file.file_type === 'text') {
     // 可预览的文件，在新窗口打开预览
@@ -424,7 +479,17 @@ const deleteFile = async (file) => {
   }
 }
 
-const getFileTypeIcon = (fileType) => {
+const getFileTypeIcon = (fileType, file = null) => {
+  // 如果提供了file对象，检查是否为三维模型文件
+  if (file && is3DModelFile(file)) {
+    return 'Box'
+  }
+  
+  // 检查是否为三维模型文件
+  if (fileType === '3d' || fileType === 'model') {
+    return 'Box'
+  }
+  
   const iconMap = {
     image: 'Picture',
     document: 'Document',
@@ -438,7 +503,17 @@ const getFileTypeIcon = (fileType) => {
   return iconMap[fileType] || 'Document'
 }
 
-const getFileTypeColor = (fileType) => {
+const getFileTypeColor = (fileType, file = null) => {
+  // 如果提供了file对象，检查是否为三维模型文件
+  if (file && is3DModelFile(file)) {
+    return '#9c27b0'
+  }
+  
+  // 检查是否为三维模型文件
+  if (fileType === '3d' || fileType === 'model') {
+    return '#9c27b0'
+  }
+  
   const colorMap = {
     image: '#67c23a',
     document: '#409eff',
@@ -478,6 +553,29 @@ const isVideoFile = (file) => {
   const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv']
   const extension = file.original_name.split('.').pop()?.toLowerCase()
   return videoExtensions.includes(extension) || file.file_type === 'video'
+}
+
+// 判断是否为三维模型文件
+const is3DModelFile = (file) => {
+  const modelExtensions = ['gltf', 'glb', 'fbx']
+  const extension = file.original_name.split('.').pop()?.toLowerCase()
+  return modelExtensions.includes(extension)
+}
+
+// 获取文件扩展名
+const getFileExtension = (file) => {
+  return file.original_name.split('.').pop()?.toLowerCase() || ''
+}
+
+// 获取模型文件URL
+const getModelUrl = (file) => {
+  return `/api/files/${file.id}/preview`
+}
+
+// 关闭模型预览对话框
+const handleCloseModelPreview = () => {
+  modelPreviewVisible.value = false
+  currentPreviewFile.value = null
 }
 
 // 生成预览URL（简化版本）
@@ -681,6 +779,75 @@ onMounted(() => {
             justify-content: center;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
           }
+          
+          .preview-model {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #e1bee7 0%, #f3e5f5 100%);
+            cursor: pointer;
+            transition: all 0.3s ease;
+          
+            &:hover {
+              background: linear-gradient(135deg, #ce93d8 0%, #e1bee7 100%);
+              transform: scale(1.02);
+          
+              .model-overlay {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+              }
+          
+              .model-type-badge {
+                transform: scale(1.1);
+              }
+            }
+          
+            .model-icon {
+              opacity: 0.7;
+              transition: opacity 0.3s ease;
+            }
+          
+            .model-overlay {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%) scale(0.8);
+              background: rgba(156, 39, 176, 0.8);
+              border-radius: 50%;
+              width: 60px;
+              height: 60px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              opacity: 0;
+              transition: all 0.3s ease;
+              pointer-events: none;
+          
+              .overlay-text {
+                font-size: 10px;
+                color: white;
+                margin-top: 2px;
+                font-weight: 500;
+              }
+            }
+          
+            .model-type-badge {
+              position: absolute;
+              top: 8px;
+              right: 8px;
+              background: rgba(156, 39, 176, 0.9);
+              color: white;
+              padding: 2px 6px;
+              border-radius: 4px;
+              font-size: 10px;
+              font-weight: bold;
+              transition: transform 0.3s ease;
+            }
+          }
 
           .preview-fallback {
             position: absolute;
@@ -766,5 +933,14 @@ onMounted(() => {
       }
     }
   }
+}
+
+/* 模型预览对话框样式 */
+.model-preview-container {
+  height: 60vh;
+  min-height: 400px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e4e7ed;
 }
 </style>

@@ -58,6 +58,11 @@ func UploadFile(c *gin.Context) {
 	mimeType := utils.GetMimeType(header.Filename)
 	fileType := utils.GetFileType(mimeType)
 
+	// 对于三维模型文件，优先根据扩展名确定文件类型
+	if modelFileType := utils.GetFileTypeByExtension(header.Filename); modelFileType != "" {
+		fileType = modelFileType
+	}
+
 	// 创建上传目录
 	uploadDir := filepath.Join("../uploads", time.Now().Format("2006/01/02"))
 	if err := utils.EnsureDir(uploadDir); err != nil {

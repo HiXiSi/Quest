@@ -16,23 +16,23 @@ import (
 func GetFileHash(file multipart.File) (string, string, error) {
 	// 重置文件指针到开始位置
 	file.Seek(0, 0)
-	
+
 	// 创建哈希计算器
 	md5Hash := md5.New()
 	sha256Hash := sha256.New()
-	
+
 	// 使用MultiWriter同时写入两个哈希计算器
 	multiWriter := io.MultiWriter(md5Hash, sha256Hash)
-	
+
 	// 复制文件内容到哈希计算器
 	_, err := io.Copy(multiWriter, file)
 	if err != nil {
 		return "", "", err
 	}
-	
+
 	// 重置文件指针到开始位置
 	file.Seek(0, 0)
-	
+
 	return fmt.Sprintf("%x", md5Hash.Sum(nil)), fmt.Sprintf("%x", sha256Hash.Sum(nil)), nil
 }
 
@@ -47,7 +47,7 @@ func GenerateFileName(originalName string) string {
 // GetMimeType 根据文件扩展名获取MIME类型
 func GetMimeType(filename string) string {
 	ext := strings.ToLower(filepath.Ext(filename))
-	
+
 	mimeTypes := map[string]string{
 		".jpg":  "image/jpeg",
 		".jpeg": "image/jpeg",
@@ -72,16 +72,20 @@ func GetMimeType(filename string) string {
 		".zip":  "application/zip",
 		".rar":  "application/x-rar-compressed",
 		".7z":   "application/x-7z-compressed",
+		// 三维模型文件格式
+		".gltf": "model/gltf+json",
+		".glb":  "model/gltf-binary",
+		".fbx":  "application/octet-stream",
 	}
-	
+
 	if mimeType, exists := mimeTypes[ext]; exists {
 		return mimeType
 	}
-	
+
 	return "application/octet-stream"
 }
 
-// GetFileType 根据MIME类型获取文件类型分类
+// GetFileType 根据MIME类型和文件名获取文件类型分类
 func GetFileType(mimeType string) string {
 	switch {
 	case strings.HasPrefix(mimeType, "image/"):
@@ -102,8 +106,22 @@ func GetFileType(mimeType string) string {
 		return "presentation"
 	case strings.Contains(mimeType, "zip") || strings.Contains(mimeType, "compressed"):
 		return "archive"
+	// 三维模型文件类型
+	case strings.HasPrefix(mimeType, "model/"):
+		return "3d"
 	default:
 		return "other"
+	}
+}
+
+// GetFileTypeByExtension 根据文件扩展名获取文件类型（作为补充）
+func GetFileTypeByExtension(filename string) string {
+	ext := strings.ToLower(filepath.Ext(filename))
+	switch ext {
+	case ".gltf", ".glb", ".fbx":
+		return "3d"
+	default:
+		return ""
 	}
 }
 

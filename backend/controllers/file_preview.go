@@ -67,7 +67,7 @@ func PreviewFile(c *gin.Context) {
 	}
 
 	// 检查文件类型是否支持预览
-	if !isPreviewSupported(file.FileType, file.MimeType) {
+	if !isPreviewSupported(file.FileType, file.MimeType) && !is3DModelFile(file.OriginalName) {
 		utils.ErrorResponse(c, 400, "文件类型不支持预览")
 		return
 	}
@@ -265,7 +265,7 @@ func GetFileThumbnail(c *gin.Context) {
 
 // isPreviewSupported 检查文件类型是否支持预览
 func isPreviewSupported(fileType, mimeType string) bool {
-	supportedTypes := []string{"image", "text", "pdf", "video"}
+	supportedTypes := []string{"image", "text", "pdf", "video", "3d", "model"}
 	for _, t := range supportedTypes {
 		if fileType == t {
 			return true
@@ -279,6 +279,10 @@ func isPreviewSupported(fileType, mimeType string) bool {
 		"text/html",
 		"text/css",
 		"text/javascript",
+		// 三维模型文件的MIME类型
+		"model/gltf+json",
+		"model/gltf-binary",
+		"application/octet-stream", // FBX文件通常使用这个MIME类型
 	}
 	for _, mime := range supportedMimes {
 		if strings.Contains(mimeType, mime) {
@@ -286,6 +290,20 @@ func isPreviewSupported(fileType, mimeType string) bool {
 		}
 	}
 
+	// 根据文件扩展名检查三维模型文件
+	// 这里需要根据实际情况调整，但是通常可以通过文件名判断
+	return false
+}
+
+// is3DModelFile 检查是否为三维模型文件
+func is3DModelFile(filename string) bool {
+	modelExtensions := []string{".gltf", ".glb", ".fbx"}
+	lowerFilename := strings.ToLower(filename)
+	for _, ext := range modelExtensions {
+		if strings.HasSuffix(lowerFilename, ext) {
+			return true
+		}
+	}
 	return false
 }
 
