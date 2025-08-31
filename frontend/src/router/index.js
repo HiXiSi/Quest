@@ -12,6 +12,10 @@ const TagManager = () => import('@/views/TagManager.vue')
 const RecycleBin = () => import('@/views/RecycleBin.vue')
 const UserManager = () => import('@/views/UserManager.vue')
 const Profile = () => import('@/views/Profile.vue')
+const FormManager = () => import('@/views/FormManager.vue')
+const FormDesigner = () => import('@/views/FormDesigner.vue')
+const FormDataManager = () => import('@/views/FormDataManager.vue')
+const FormSubmit = () => import('@/views/FormSubmit.vue')
 
 const routes = [
   {
@@ -66,8 +70,39 @@ const routes = [
         path: 'profile',
         name: 'Profile',
         component: Profile
+      },
+      {
+        path: 'forms',
+        name: 'FormManager',
+        component: FormManager
+      },
+      {
+        path: 'forms/new',
+        name: 'FormDesigner',
+        component: FormDesigner
+      },
+      {
+        path: 'forms/:id/design',
+        name: 'FormDesign',
+        component: FormDesigner
+      },
+      {
+        path: 'forms/:id/edit',
+        name: 'FormEdit',
+        component: FormDesigner
+      },
+      {
+        path: 'forms/:id/data',
+        name: 'FormDataManager',
+        component: FormDataManager
       }
     ]
+  },
+  {
+    path: '/form/:id',
+    name: 'FormSubmit',
+    component: FormSubmit,
+    meta: { requiresAuth: false }
   }
 ]
 

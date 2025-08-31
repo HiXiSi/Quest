@@ -33,6 +33,11 @@
           <template #title>文件上传</template>
         </el-menu-item>
         
+        <el-menu-item index="/forms">
+          <el-icon><List /></el-icon>
+          <template #title>表单管理</template>
+        </el-menu-item>
+        
         <el-sub-menu index="manage">
           <template #title>
             <el-icon><Setting /></el-icon>
@@ -163,8 +168,25 @@ const getMenuTitle = (path) => {
     '/tags': '标签管理',
     '/recycle': '回收站',
     '/users': '用户管理',
-    '/profile': '个人中心'
+    '/profile': '个人中心',
+    '/forms': '表单管理',
+    '/forms/new': '新建表单',
+    '/forms/edit': '编辑表单',
+    '/forms/design': '设计表单',
+    '/forms/data': '表单数据'
   }
+  
+  // 处理动态路由
+  if (path.includes('/forms/') && path.includes('/edit')) {
+    return '编辑表单'
+  }
+  if (path.includes('/forms/') && path.includes('/design')) {
+    return '设计表单'
+  }
+  if (path.includes('/forms/') && path.includes('/data')) {
+    return '表单数据'
+  }
+  
   return titleMap[path] || '未知页面'
 }
 

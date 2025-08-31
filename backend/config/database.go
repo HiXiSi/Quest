@@ -28,6 +28,8 @@ func InitDB() {
 		&models.Tag{},
 		&models.File{},
 		&models.FileTag{},
+		&models.FormSchema{},
+		&models.FormRecord{},
 	)
 	if err != nil {
 		log.Fatal("数据表迁移失败:", err)

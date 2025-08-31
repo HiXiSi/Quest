@@ -82,6 +82,26 @@ func SetupRoutes(r *gin.Engine) {
 				recycle.DELETE("/:id", controllers.PermanentDeleteFile)
 				recycle.POST("/batch-delete", controllers.BatchPermanentDeleteFiles)
 			}
+
+			// 表单结构管理
+			forms := protected.Group("/forms")
+			{
+				forms.GET("/", controllers.GetFormSchemas)
+				forms.POST("/", controllers.CreateFormSchema)
+				forms.GET("/:id", controllers.GetFormSchema)
+				forms.PUT("/:id", controllers.UpdateFormSchema)
+				forms.DELETE("/:id", controllers.DeleteFormSchema)
+			}
+
+			// 表单数据管理
+			formRecords := protected.Group("/forms")
+			{
+				formRecords.GET("/:id/records", controllers.GetFormRecords)
+				formRecords.POST("/records", controllers.CreateFormRecord)
+				formRecords.GET("/records/:id", controllers.GetFormRecord)
+				formRecords.PUT("/records/:id", controllers.UpdateFormRecord)
+				formRecords.DELETE("/records/:id", controllers.DeleteFormRecord)
+			}
 		}
 
 		// 管理员路由
