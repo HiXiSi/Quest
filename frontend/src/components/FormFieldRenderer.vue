@@ -5,67 +5,55 @@
       :required="field.required"
       :prop="preview ? undefined : field.name"
     >
-      <!-- 文本输入 -->
+      <!-- 唯一ID字段 -->
       <el-input
-        v-if="field.type === 'text' && (!field.inputType || field.inputType === 'single')"
+        v-if="field.type === 'unique_id'"
         v-model="fieldValue"
         :placeholder="field.placeholder"
-        :disabled="preview"
-        :maxlength="field.max_length"
-        :minlength="field.min_length"
-        show-word-limit
+        :disabled="true"
+        readonly
       />
       
-      <!-- 多行文本输入 -->
-      <el-input
-        v-else-if="field.type === 'text' && field.inputType === 'multi'"
-        v-model="fieldValue"
-        type="textarea"
-        :placeholder="field.placeholder"
-        :disabled="preview"
-        :maxlength="field.max_length"
-        :minlength="field.min_length"
-        :rows="field.rows || 4"
-        show-word-limit
-      />
-      
-      <!-- 数字 -->
+      <!-- 整数字段 -->
       <el-input-number
-        v-else-if="field.type === 'number'"
+        v-else-if="field.type === 'integer'"
         v-model="fieldValue"
         :placeholder="field.placeholder"
         :disabled="preview"
-        :min="field.min"
-        :max="field.max"
-        :step="field.step || 1"
+        :min="field.min_value"
+        :max="field.max_value"
+        :step="1"
         style="width: 100%"
       />
       
-      <!-- 邮箱 -->
-      <el-input
-        v-else-if="field.type === 'email'"
+      <!-- 浮点数字段 -->
+      <el-input-number
+        v-else-if="field.type === 'float'"
         v-model="fieldValue"
-        type="email"
+        :placeholder="field.placeholder"
+        :disabled="preview"
+        :min="field.min_value"
+        :max="field.max_value"
+        :precision="field.precision || 2"
+        :step="0.01"
+        style="width: 100%"
+      />
+      
+      <!-- 字符串字段 -->
+      <el-input
+        v-else-if="field.type === 'string' && field.input_type === 'input'"
+        v-model="fieldValue"
+        :type="getStringInputType(field)"
         :placeholder="field.placeholder"
         :disabled="preview"
         :maxlength="field.max_length"
         :minlength="field.min_length"
+        show-word-limit
       />
       
-      <!-- 网址 -->
+      <!-- 密码字段 -->
       <el-input
-        v-else-if="field.type === 'url'"
-        v-model="fieldValue"
-        type="url"
-        :placeholder="field.placeholder"
-        :disabled="preview"
-        :maxlength="field.max_length"
-        :minlength="field.min_length"
-      />
-      
-      <!-- 密码 -->
-      <el-input
-        v-else-if="field.type === 'password'"
+        v-else-if="field.type === 'string' && field.input_type === 'password'"
         v-model="fieldValue"
         type="password"
         :placeholder="field.placeholder"
@@ -73,67 +61,58 @@
         :maxlength="field.max_length"
         :minlength="field.min_length"
         show-password
+        show-word-limit
       />
       
-      <!-- 下拉选择 -->
-      <el-select
-        v-else-if="field.type === 'select'"
+      <!-- 多行文本输入 -->
+      <el-input
+        v-else-if="field.type === 'string' && field.input_type === 'textarea'"
         v-model="fieldValue"
+        type="textarea"
         :placeholder="field.placeholder"
         :disabled="preview"
-        style="width: 100%"
-      >
-        <el-option
-          v-for="option in field.options"
-          :key="option.value"
-          :label="option.label"
-          :value="option.value"
-        />
-      </el-select>
+        :maxlength="field.max_length"
+        :minlength="field.min_length"
+        :rows="field.textarea_rows || 4"
+        show-word-limit
+      />
       
-      <!-- 单选按钮 -->
+      <!-- 文件上传 -->
+      <AssetUpload
+        v-else-if="field.type === 'string' && field.input_type === 'file'"
+        v-model="fieldValue"
+        :disabled="preview"
+      />
+      
+      <!-- 布尔字段 -->
+      <el-switch
+        v-else-if="field.type === 'boolean' && field.input_type === 'switch'"
+        v-model="fieldValue"
+        :disabled="preview"
+      />
+      
+      <!-- 布尔单选按钮 -->
       <el-radio-group
-        v-else-if="field.type === 'radio'"
+        v-else-if="field.type === 'boolean' && field.input_type === 'radio'"
         v-model="fieldValue"
         :disabled="preview"
       >
-        <el-radio
-          v-for="option in field.options"
-          :key="option.value"
-          :label="option.value"
-        >
-          {{ option.label }}
-        </el-radio>
+        <el-radio :label="true">是</el-radio>
+        <el-radio :label="false">否</el-radio>
       </el-radio-group>
       
-      <!-- 多选框 -->
-      <el-checkbox-group
-        v-else-if="field.type === 'checkbox'"
+      <!-- 布尔复选框 -->
+      <el-checkbox
+        v-else-if="field.type === 'boolean' && field.input_type === 'checkbox'"
         v-model="fieldValue"
         :disabled="preview"
       >
-        <el-checkbox
-          v-for="option in field.options"
-          :key="option.value"
-          :label="option.value"
-        >
-          {{ option.label }}
-        </el-checkbox>
-      </el-checkbox-group>
+        {{ field.label }}
+      </el-checkbox>
       
-      <!-- 日期 -->
+      <!-- 时间字段 - 日期时间 -->
       <el-date-picker
-        v-else-if="field.type === 'date'"
-        v-model="fieldValue"
-        type="date"
-        :placeholder="field.placeholder"
-        :disabled="preview"
-        style="width: 100%"
-      />
-      
-      <!-- 日期时间 -->
-      <el-date-picker
-        v-else-if="field.type === 'datetime'"
+        v-else-if="field.type === 'datetime' && field.input_type === 'datetime'"
         v-model="fieldValue"
         type="datetime"
         :placeholder="field.placeholder"
@@ -141,46 +120,87 @@
         style="width: 100%"
       />
       
-      <!-- 时间 -->
+      <!-- 时间字段 - 仅日期 -->
+      <el-date-picker
+        v-else-if="field.type === 'datetime' && field.input_type === 'date'"
+        v-model="fieldValue"
+        type="date"
+        :placeholder="field.placeholder"
+        :disabled="preview"
+        style="width: 100%"
+      />
+      
+      <!-- 时间字段 - 仅时间 -->
       <el-time-picker
-        v-else-if="field.type === 'time'"
+        v-else-if="field.type === 'datetime' && field.input_type === 'time'"
         v-model="fieldValue"
         :placeholder="field.placeholder"
         :disabled="preview"
         style="width: 100%"
       />
       
-      <!-- 文件上传 -->
-      <el-upload
-        v-else-if="field.type === 'file'"
-        class="upload-demo"
+      <!-- 单选枚举 - 下拉选择 -->
+      <el-select
+        v-else-if="field.type === 'single_enum' && field.input_type === 'select'"
+        v-model="fieldValue"
+        :placeholder="field.placeholder"
         :disabled="preview"
-        :auto-upload="false"
-        :show-file-list="true"
-        :limit="1"
+        style="width: 100%"
       >
-        <el-button type="primary" :disabled="preview">
-          <el-icon><Upload /></el-icon>
-          选择文件
-        </el-button>
-        <template #tip>
-          <div class="el-upload__tip">{{ field.placeholder || '请选择文件' }}</div>
-        </template>
-      </el-upload>
+        <el-option
+          v-for="option in field.enum_options || []"
+          :key="option.value"
+          :label="option.label"
+          :value="option.value"
+        />
+      </el-select>
       
-      <!-- 开关 -->
-      <el-switch
-        v-else-if="field.type === 'switch'"
+      <!-- 单选枚举 - 单选按钮 -->
+      <el-radio-group
+        v-else-if="field.type === 'single_enum' && field.input_type === 'radio'"
         v-model="fieldValue"
         :disabled="preview"
-      />
+      >
+        <el-radio
+          v-for="option in field.enum_options || []"
+          :key="option.value"
+          :label="option.value"
+        >
+          {{ option.label }}
+        </el-radio>
+      </el-radio-group>
       
-      <!-- 评分 -->
-      <el-rate
-        v-else-if="field.type === 'rate'"
+      <!-- 多选枚举 - 多选框 -->
+      <el-checkbox-group
+        v-else-if="field.type === 'multi_enum' && field.input_type === 'checkbox'"
         v-model="fieldValue"
         :disabled="preview"
-      />
+      >
+        <el-checkbox
+          v-for="option in field.enum_options || []"
+          :key="option.value"
+          :label="option.value"
+        >
+          {{ option.label }}
+        </el-checkbox>
+      </el-checkbox-group>
+      
+      <!-- 多选枚举 - 多选下拉 -->
+      <el-select
+        v-else-if="field.type === 'multi_enum' && field.input_type === 'multi-select'"
+        v-model="fieldValue"
+        :placeholder="field.placeholder"
+        :disabled="preview"
+        multiple
+        style="width: 100%"
+      >
+        <el-option
+          v-for="option in field.enum_options || []"
+          :key="option.value"
+          :label="option.label"
+          :value="option.value"
+        />
+      </el-select>
       
       <!-- 未知类型 -->
       <div v-else class="unknown-field">
@@ -199,6 +219,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { Upload } from '@element-plus/icons-vue'
+import AssetUpload from './AssetUpload.vue'
 
 const props = defineProps({
   field: {
@@ -217,6 +238,20 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
+// 获取字符串输入类型
+const getStringInputType = (field) => {
+  switch (field.format) {
+    case 'email':
+      return 'email'
+    case 'url':
+      return 'url'
+    case 'phone':
+      return 'tel'
+    default:
+      return 'text'
+  }
+}
+
 // 字段值
 const fieldValue = computed({
   get() {
@@ -226,14 +261,17 @@ const fieldValue = computed({
     
     // 根据字段类型返回默认值
     switch (props.field.type) {
-      case 'checkbox':
+      case 'multi_enum':
         return []
-      case 'number':
+      case 'integer':
+      case 'float':
         return props.field.default_value ? Number(props.field.default_value) : null
-      case 'switch':
+      case 'boolean':
         return props.field.default_value === 'true' || props.field.default_value === true
-      case 'rate':
-        return props.field.default_value ? Number(props.field.default_value) : 0
+      case 'unique_id':
+        return ''
+      case 'datetime':
+        return props.field.default_value || null
       default:
         return props.field.default_value || ''
     }
@@ -274,17 +312,41 @@ watch(
 
 :deep(.el-form-item__label) {
   font-weight: 500;
+  font-size: 14px;
 }
 
 :deep(.el-form-item) {
-  margin-bottom: 0;
+  margin-bottom: 16px;
 }
 
 :deep(.el-radio) {
-  margin-right: 16px;
+  margin-right: 12px;
 }
 
 :deep(.el-checkbox) {
-  margin-right: 16px;
+  margin-right: 12px;
+}
+
+/* 紧凑布局优化 */
+:deep(.el-input),
+:deep(.el-select),
+:deep(.el-date-picker),
+:deep(.el-time-picker) {
+  width: 100%;
+}
+
+:deep(.el-input-number) {
+  width: 100%;
+}
+
+:deep(.el-radio-group) {
+  width: 100%;
+}
+
+:deep(.el-checkbox-group) {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 </style>

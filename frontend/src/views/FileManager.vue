@@ -311,14 +311,24 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
-  Upload, Search, Download, Delete, Edit, View, MoreFilled,
-  Picture, Document, EditPen, VideoPlay, Headset, Folder, Box
+  Picture, 
+  VideoPlay, 
+  Document, 
+  Folder,
+  Edit,
+  Delete,
+  Search,
+  Refresh,
+  Upload,
+  Box,
+  View
 } from '@element-plus/icons-vue'
 import api from '@/utils/api'
 import ModelViewer from '@/components/ModelViewer.vue'
+import { toAbsoluteUrl } from '@/utils/urlHelper'
 
 const loading = ref(false)
 const files = ref([])
@@ -580,7 +590,8 @@ const handleCloseModelPreview = () => {
 
 // 生成预览URL（简化版本）
 const getPreviewUrl = (file) => {
-  return `/api/files/${file.id}/preview`
+  const relativeUrl = `/api/files/${file.id}/preview`
+  return toAbsoluteUrl(relativeUrl)
 }
 
 // 图片加载错误处理

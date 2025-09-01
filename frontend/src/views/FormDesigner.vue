@@ -151,7 +151,6 @@
                   <el-option label="邮箱地址" value="email" />
                   <el-option label="手机号码" value="phone" />
                   <el-option label="网址URL" value="url" />
-                  <el-option label="密码" value="password" />
                 </el-select>
               </el-form-item>
               <el-form-item label="最小长度">
@@ -177,13 +176,6 @@
             
             <!-- 时间类型的格式 -->
             <template v-if="selectedField.type === 'datetime'">
-              <el-form-item label="更新方式">
-                <el-select v-model="selectedField.update_mode">
-                  <el-option label="创建时间" value="created_at" />
-                  <el-option label="更新时间" value="updated_at" />
-                  <el-option label="用户输入" value="user_input" />
-                </el-select>
-              </el-form-item>
               <el-form-item label="格式化">
                 <el-select v-model="selectedField.time_format">
                   <el-option label="Date对象" value="date_object" />
@@ -250,6 +242,7 @@
               <el-form-item label="输入方式">
                 <el-select v-model="selectedField.input_type">
                   <el-option label="单行输入" value="input" />
+                  <el-option label="密码输入" value="password" />
                   <el-option label="多行输入" value="textarea" />
                   <el-option label="文件上传" value="file" />
                 </el-select>
@@ -270,8 +263,9 @@
               </el-form-item>
               <el-form-item v-else label="显示方式">
                 <el-select v-model="selectedField.input_type">
-                  <el-option label="隐藏字段" value="hidden" />
-                  <el-option label="只读展示" value="readonly" />
+                  <el-option label="日期时间" value="datetime" />
+                  <el-option label="仅日期" value="date" />
+                  <el-option label="仅时间" value="time" />
                 </el-select>
               </el-form-item>
             </template>
@@ -478,7 +472,6 @@ const createFieldFromType = (fieldType) => {
     case 'datetime':
       return {
         ...baseField,
-        update_mode: 'user_input', // 默认用户输入
         time_format: 'datetime', // 默认日期时间格式
         input_type: 'datetime'
       }

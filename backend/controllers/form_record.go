@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"material-platform/config"
 	"material-platform/models"
 	"material-platform/utils"
@@ -269,12 +270,14 @@ func validateFormData(schema models.JSON, data map[string]interface{}) error {
 	// 验证必填字段
 	for _, field := range schemaData.Fields {
 		if field.Required {
-			if value, exists := data[field.ID]; !exists || value == nil || value == "" {
-				return gin.Error{
-					Err:  nil,
-					Type: gin.ErrorTypePublic,
-					Meta: "字段 '" + field.Label + "' 是必填的",
-				}
+			// 检查字段名称(优先使用Name，如果为空则使用ID)
+			fieldKey := field.Name
+			if fieldKey == "" {
+				fieldKey = field.ID
+			}
+
+			if value, exists := data[fieldKey]; !exists || value == nil || value == "" {
+				return fmt.Errorf("字段 '%s' 是必填的", field.Label)
 			}
 		}
 	}

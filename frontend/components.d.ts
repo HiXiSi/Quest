@@ -7,6 +7,7 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
+    AssetUpload: typeof import('./src/components/AssetUpload.vue')['default']
     DynamicForm: typeof import('./src/components/DynamicForm.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
     ElAside: typeof import('element-plus/es')['ElAside']

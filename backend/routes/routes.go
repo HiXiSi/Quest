@@ -11,6 +11,7 @@ import (
 func SetupRoutes(r *gin.Engine) {
 	// 静态文件服务
 	r.Static("/uploads", "../uploads")
+	r.Static("/assets", "../assets") // 资源文件服务（表单字段上传）
 	r.Static("/static", "../static")
 
 	// API路由组
@@ -101,6 +102,12 @@ func SetupRoutes(r *gin.Engine) {
 				formRecords.GET("/records/:id", controllers.GetFormRecord)
 				formRecords.PUT("/records/:id", controllers.UpdateFormRecord)
 				formRecords.DELETE("/records/:id", controllers.DeleteFormRecord)
+			}
+
+			// 通用资源上传（用于表单字段）
+			assets := protected.Group("/assets")
+			{
+				assets.POST("/upload", controllers.UploadAsset)
 			}
 		}
 

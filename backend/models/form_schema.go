@@ -93,7 +93,6 @@ type FormField struct {
 	Precision *int     `json:"precision,omitempty"` // 小数位数(仅浮点数)
 
 	// 时间类型专用
-	UpdateMode string `json:"update_mode,omitempty"` // created_at, updated_at, user_input
 	TimeFormat string `json:"time_format,omitempty"` // date_object, datetime, date, time
 
 	// 枚举类型专用
